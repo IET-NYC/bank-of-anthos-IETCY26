@@ -45,6 +45,8 @@ class TransactionValidatorTest {
     private static final String NON_AUTHED_ACCOUNT_NUM = "0987654321";
     private static final String TO_ACCOUNT_NUM = "5678901234";
     private static final String TO_ROUTING_NUM = "567891234";
+    private static final String ZERO_ACCOUNT_NUM = "0000000000";
+    private static final String ZERO_ROUTING_NUM = "000000000";
     private static final Integer VALID_AMOUNT = 3755;
 
     private static final String[] INVALID_ACCT_NUM = {
@@ -289,6 +291,112 @@ class TransactionValidatorTest {
             assertEquals(EXCEPTION_MESSAGE_INVALID_AMOUNT,
                 exceptionThrown.getMessage());
         }
+    }
+
+    @Test
+    @DisplayName("Given an external sender sends to the same external account, "
+            + "IllegalArgumentException is thrown")
+    void validateTransactionFailWhenExternalSenderIsExternalReceiver() {
+        // Given
+        when(transaction.getFromAccountNum()).thenReturn(
+                NON_AUTHED_ACCOUNT_NUM);
+        when(transaction.getFromRoutingNum()).thenReturn(TO_ROUTING_NUM);
+        when(transaction.getToAccountNum()).thenReturn(
+                NON_AUTHED_ACCOUNT_NUM);
+
+        // When
+        IllegalArgumentException exceptionThrown = assertThrows(
+                IllegalArgumentException.class, () -> {
+                    transactionValidator.validateTransaction(
+                            LOCAL_ROUTING_NUM, AUTHED_ACCOUNT_NUM, transaction);
+                });
+
+        // Then
+        assertNotNull(exceptionThrown);
+        assertEquals(EXCEPTION_MESSAGE_SEND_TO_SELF,
+                exceptionThrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Given a malformed account number on an unauthenticated "
+            + "sender, the invalid number error takes precedence")
+    void validateTransactionFailWithInvalidNumberBeforeAuthenticationCheck() {
+        // Given
+        when(transaction.getFromAccountNum()).thenReturn("abcdefghij");
+
+        // When
+        IllegalArgumentException exceptionThrown = assertThrows(
+                IllegalArgumentException.class, () -> {
+                    transactionValidator.validateTransaction(
+                            LOCAL_ROUTING_NUM, AUTHED_ACCOUNT_NUM, transaction);
+                });
+
+        // Then
+        assertNotNull(exceptionThrown);
+        assertEquals(EXCEPTION_MESSAGE_INVALID_NUMBER,
+                exceptionThrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Given an unauthenticated internal sender sends to itself, "
+            + "the authentication error takes precedence")
+    void validateTransactionFailWithAuthenticationBeforeSendToSelfCheck() {
+        // Given
+        when(transaction.getFromAccountNum()).thenReturn(
+                NON_AUTHED_ACCOUNT_NUM);
+        when(transaction.getToAccountNum()).thenReturn(
+                NON_AUTHED_ACCOUNT_NUM);
+        when(transaction.getToRoutingNum()).thenReturn(LOCAL_ROUTING_NUM);
+
+        // When
+        IllegalArgumentException exceptionThrown = assertThrows(
+                IllegalArgumentException.class, () -> {
+                    transactionValidator.validateTransaction(
+                            LOCAL_ROUTING_NUM, AUTHED_ACCOUNT_NUM, transaction);
+                });
+
+        // Then
+        assertNotNull(exceptionThrown);
+        assertEquals(EXCEPTION_MESSAGE_NOT_AUTHENTICATED,
+                exceptionThrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Given a self transfer with a non-positive amount, "
+            + "the send to self error takes precedence")
+    void validateTransactionFailWithSendToSelfBeforeAmountCheck() {
+        // Given
+        when(transaction.getToAccountNum()).thenReturn(AUTHED_ACCOUNT_NUM);
+        when(transaction.getToRoutingNum()).thenReturn(LOCAL_ROUTING_NUM);
+        when(transaction.getAmount()).thenReturn(0);
+
+        // When
+        IllegalArgumentException exceptionThrown = assertThrows(
+                IllegalArgumentException.class, () -> {
+                    transactionValidator.validateTransaction(
+                            LOCAL_ROUTING_NUM, AUTHED_ACCOUNT_NUM, transaction);
+                });
+
+        // Then
+        assertNotNull(exceptionThrown);
+        assertEquals(EXCEPTION_MESSAGE_SEND_TO_SELF,
+                exceptionThrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Given account and routing numbers padded with leading zeros, "
+            + "no exception is thrown")
+    void validateTransactionSuccessWhenNumbersHaveLeadingZeros() {
+        // Given
+        when(transaction.getFromAccountNum()).thenReturn(ZERO_ACCOUNT_NUM);
+        when(transaction.getFromRoutingNum()).thenReturn(ZERO_ROUTING_NUM);
+        when(transaction.getToRoutingNum()).thenReturn(ZERO_ROUTING_NUM);
+
+        // Then
+        assertDoesNotThrow(() -> {
+            transactionValidator.validateTransaction(
+                    ZERO_ROUTING_NUM, ZERO_ACCOUNT_NUM, transaction);
+        });
     }
 
     void assertInvalidNumberHelper() {
