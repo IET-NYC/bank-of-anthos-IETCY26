@@ -84,7 +84,7 @@ class TransactionValidatorTest {
     };
 
     private static final Integer[] INVALID_TRANSACTION_AMOUNT = {
-        null, 0, -23, Integer.MIN_VALUE
+        null, 0, -1, -23, Integer.MIN_VALUE
     };
 
     @BeforeEach
@@ -135,6 +135,39 @@ class TransactionValidatorTest {
     void validateTransactionSuccessWhenAccountsMatchAcrossRoutingNumbers() {
         // Given
         when(transaction.getToAccountNum()).thenReturn(AUTHED_ACCOUNT_NUM);
+
+        // Then
+        assertDoesNotThrow(() -> {
+            transactionValidator.validateTransaction(
+                    LOCAL_ROUTING_NUM, AUTHED_ACCOUNT_NUM, transaction);
+        });
+    }
+
+    @Test
+    @DisplayName("Given an external sender and local receiver share an account number, " +
+            "no exception is thrown")
+    void validateTransactionSuccessWhenExternalSenderMatchesLocalReceiverAccount() {
+        // Given
+        when(transaction.getFromAccountNum()).thenReturn(
+                NON_AUTHED_ACCOUNT_NUM);
+        when(transaction.getFromRoutingNum()).thenReturn(TO_ROUTING_NUM);
+        when(transaction.getToAccountNum()).thenReturn(
+                NON_AUTHED_ACCOUNT_NUM);
+        when(transaction.getToRoutingNum()).thenReturn(LOCAL_ROUTING_NUM);
+
+        // Then
+        assertDoesNotThrow(() -> {
+            transactionValidator.validateTransaction(
+                    LOCAL_ROUTING_NUM, AUTHED_ACCOUNT_NUM, transaction);
+        });
+    }
+
+    @Test
+    @DisplayName("Given internal routing numbers match but accounts differ, " +
+            "no exception is thrown")
+    void validateTransactionSuccessWhenInternalRoutingMatchesAcrossAccounts() {
+        // Given
+        when(transaction.getToRoutingNum()).thenReturn(LOCAL_ROUTING_NUM);
 
         // Then
         assertDoesNotThrow(() -> {
