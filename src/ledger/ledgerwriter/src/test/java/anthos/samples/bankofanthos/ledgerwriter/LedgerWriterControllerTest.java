@@ -25,16 +25,16 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.micrometer.core.instrument.Clock;
+import io.micrometer.core.lang.Nullable;
 import io.micrometer.stackdriver.StackdriverConfig;
 import io.micrometer.stackdriver.StackdriverMeterRegistry;
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -79,7 +79,7 @@ class LedgerWriterControllerTest {
 
     @BeforeEach
     void setUp() {
-        openMocks(this);
+        initMocks(this);
         StackdriverMeterRegistry meterRegistry = new StackdriverMeterRegistry(new StackdriverConfig() {
               @Override
               public boolean enabled() {

@@ -31,7 +31,7 @@ import static anthos.samples.bankofanthos.ledgerwriter.ExceptionMessages.
         EXCEPTION_MESSAGE_INVALID_AMOUNT;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 class TransactionValidatorTest {
 
@@ -91,7 +91,7 @@ class TransactionValidatorTest {
 
     @BeforeEach
     void setUp() {
-        openMocks(this);
+        initMocks(this);
         transactionValidator = new TransactionValidator();
 
         when(transaction.getFromAccountNum()).thenReturn(AUTHED_ACCOUNT_NUM);
