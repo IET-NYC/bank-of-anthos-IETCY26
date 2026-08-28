@@ -48,6 +48,7 @@ class TransactionValidatorTest {
     private static final Integer VALID_AMOUNT = 3755;
 
     private static final String[] INVALID_ACCT_NUM = {
+        null,
         "12345678",
         "123456789",
         "12345678900",
@@ -63,6 +64,7 @@ class TransactionValidatorTest {
     };
 
     private static final String[] INVALID_ROUTING_NUM = {
+        null,
         "12345678",
         "1234567890",
         "12345678900",
@@ -82,7 +84,7 @@ class TransactionValidatorTest {
     };
 
     private static final Integer[] INVALID_TRANSACTION_AMOUNT = {
-        0, -23, Integer.MIN_VALUE
+        null, 0, -23, Integer.MIN_VALUE
     };
 
     @BeforeEach
@@ -110,6 +112,35 @@ class TransactionValidatorTest {
                     LOCAL_ROUTING_NUM, AUTHED_ACCOUNT_NUM, transaction);
             });
         }
+    }
+
+    @Test
+    @DisplayName("Given the sender is external and not authenticated, no exception is thrown")
+    void validateTransactionSuccessWhenExternalSenderIsNotAuthenticated() {
+        // Given
+        when(transaction.getFromAccountNum()).thenReturn(
+                NON_AUTHED_ACCOUNT_NUM);
+        when(transaction.getFromRoutingNum()).thenReturn(TO_ROUTING_NUM);
+
+        // Then
+        assertDoesNotThrow(() -> {
+            transactionValidator.validateTransaction(
+                    LOCAL_ROUTING_NUM, AUTHED_ACCOUNT_NUM, transaction);
+        });
+    }
+
+    @Test
+    @DisplayName("Given sender and receiver accounts match but routing numbers differ, " +
+            "no exception is thrown")
+    void validateTransactionSuccessWhenAccountsMatchAcrossRoutingNumbers() {
+        // Given
+        when(transaction.getToAccountNum()).thenReturn(AUTHED_ACCOUNT_NUM);
+
+        // Then
+        assertDoesNotThrow(() -> {
+            transactionValidator.validateTransaction(
+                    LOCAL_ROUTING_NUM, AUTHED_ACCOUNT_NUM, transaction);
+        });
     }
 
     @Test

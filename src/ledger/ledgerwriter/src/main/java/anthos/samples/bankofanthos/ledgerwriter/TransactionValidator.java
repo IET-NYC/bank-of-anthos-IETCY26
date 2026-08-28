@@ -71,7 +71,11 @@ public class TransactionValidator {
         final Integer amount = transaction.getAmount();
 
         // Validate account and routing numbers.
-        if (!ACCT_REGEX.matcher(fromAcct).matches()
+        if (fromAcct == null
+                || toAcct == null
+                || fromRoute == null
+                || toRoute == null
+                || !ACCT_REGEX.matcher(fromAcct).matches()
                 || !ACCT_REGEX.matcher(toAcct).matches()
                 || !ROUTE_REGEX.matcher(
                         fromRoute).matches()
@@ -94,7 +98,7 @@ public class TransactionValidator {
             throw new IllegalArgumentException(EXCEPTION_MESSAGE_SEND_TO_SELF);
         }
         // Ensure amount is valid value.
-        if (amount <= 0) {
+        if (amount == null || amount <= 0) {
             LOGGER.error("Invalid transaction: Transaction amount invalid");
             throw new IllegalArgumentException(
                     EXCEPTION_MESSAGE_INVALID_AMOUNT);
