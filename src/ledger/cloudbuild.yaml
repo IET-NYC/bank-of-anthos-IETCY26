@@ -17,7 +17,22 @@ steps:
     id: download-skaffold-cache
     args: ['storage', 'cp', $_CACHE_URI, '/workspace/cache'] # always write skaffold cache to filename cache in workspace
   - name: gcr.io/k8s-skaffold/skaffold:v2.22.0
+    id: install-jdk
+    script: |
+      set -eu
+      curl -fsSL -o /workspace/jdk.tar.gz "https://github.com/adoptium/temurin${JDK_MAJOR}-binaries/releases/download/jdk-${JDK_VERSION}%2B${JDK_BUILD}/OpenJDK${JDK_MAJOR}U-jdk_x64_linux_hotspot_${JDK_VERSION}_${JDK_BUILD}.tar.gz"
+      mkdir -p /workspace/jdk
+      tar -xzf /workspace/jdk.tar.gz -C /workspace/jdk --strip-components=1
+      rm /workspace/jdk.tar.gz
+      /workspace/jdk/bin/java -version
+    env:
+      - "JDK_MAJOR=25"
+      - "JDK_VERSION=25.0.4.1"
+      - "JDK_BUILD=1"
+  - name: gcr.io/k8s-skaffold/skaffold:v2.22.0
     id: build-and-push-images
+    env:
+      - "JAVA_HOME=/workspace/jdk"
     args:
       - "skaffold"
       - "build"
@@ -35,6 +50,7 @@ steps:
       - "TEAM=$_TEAM"
       - "SERVICE=$_SERVICE"
       - "MAVEN_USER_HOME=/workspace/.m2"
+      - "JAVA_HOME=/workspace/jdk"
     timeout: 1200s
   - name: gcr.io/cloud-builders/gcloud
     id: trigger-release
