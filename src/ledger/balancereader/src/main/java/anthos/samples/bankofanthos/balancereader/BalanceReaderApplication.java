@@ -19,14 +19,13 @@ package anthos.samples.bankofanthos.balancereader;
 import com.google.cloud.MetadataConfig;
 import io.micrometer.stackdriver.StackdriverConfig;
 import io.micrometer.stackdriver.StackdriverMeterRegistry;
+import jakarta.annotation.PreDestroy;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.PreDestroy;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
@@ -35,7 +34,7 @@ import org.springframework.context.annotation.Bean;
  *
  * Microservice to track the bank balance for each user account.
  */
-@SpringBootApplication(exclude = ZipkinAutoConfiguration.class)
+@SpringBootApplication
 public class BalanceReaderApplication {
 
     private static final Logger LOGGER =

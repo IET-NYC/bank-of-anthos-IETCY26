@@ -20,7 +20,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.binder.cache.GuavaCacheMetrics;
-import io.micrometer.core.lang.Nullable;
 import io.micrometer.stackdriver.StackdriverConfig;
 import io.micrometer.stackdriver.StackdriverMeterRegistry;
 import java.util.concurrent.ExecutionException;
@@ -31,6 +30,8 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
+import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,11 +43,12 @@ import org.springframework.web.client.ResourceAccessException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 class BalanceReaderControllerTest {
 
     private BalanceReaderController balanceReaderController;
+    private AutoCloseable mocks;
 
     @Mock
     private JWTVerifier verifier;
@@ -75,7 +77,7 @@ class BalanceReaderControllerTest {
 
     @BeforeEach
     void setUp() {
-        initMocks(this);
+        mocks = openMocks(this);
         StackdriverMeterRegistry meterRegistry = new StackdriverMeterRegistry(new StackdriverConfig() {
             @Override
             public boolean enabled() {
@@ -100,6 +102,11 @@ class BalanceReaderControllerTest {
 
         when(verifier.verify(TOKEN)).thenReturn(jwt);
         when(jwt.getClaim(JWT_ACCOUNT_KEY)).thenReturn(claim);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        mocks.close();
     }
 
     @Test
