@@ -19,7 +19,7 @@ package anthos.samples.bankofanthos.transactionhistory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.exceptions.JWTVerificationException;
@@ -28,11 +28,12 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.cache.CacheStats;
 import com.google.common.cache.LoadingCache;
 import io.micrometer.core.instrument.Clock;
-import io.micrometer.core.lang.Nullable;
 import io.micrometer.stackdriver.StackdriverConfig;
 import io.micrometer.stackdriver.StackdriverMeterRegistry;
 import java.util.Deque;
 import java.util.concurrent.ExecutionException;
+import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,7 @@ import org.springframework.http.ResponseEntity;
 class TransactionHistoryControllerTest {
 
     private TransactionHistoryController transactionHistoryController;
+    private AutoCloseable mocks;
 
     @Mock
     private JWTVerifier verifier;
@@ -73,7 +75,7 @@ class TransactionHistoryControllerTest {
 
     @BeforeEach
     void setUp() {
-        initMocks(this);
+        mocks = openMocks(this);
         StackdriverMeterRegistry meterRegistry = new StackdriverMeterRegistry(new StackdriverConfig() {
             @Override
             public boolean enabled() {
@@ -98,6 +100,11 @@ class TransactionHistoryControllerTest {
 
         when(verifier.verify(TOKEN)).thenReturn(jwt);
         when(jwt.getClaim(JWT_ACCOUNT_KEY)).thenReturn(claim);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        mocks.close();
     }
 
     @Test
