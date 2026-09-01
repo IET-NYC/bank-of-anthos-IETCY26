@@ -16,7 +16,6 @@
 
 package anthos.samples.bankofanthos.ledgerwriter;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,12 +31,11 @@ import static anthos.samples.bankofanthos.ledgerwriter.ExceptionMessages.
         EXCEPTION_MESSAGE_INVALID_AMOUNT;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 class TransactionValidatorTest {
 
     private TransactionValidator transactionValidator;
-    private AutoCloseable mocks;
 
     @Mock
     private Transaction transaction;
@@ -93,7 +91,7 @@ class TransactionValidatorTest {
 
     @BeforeEach
     void setUp() {
-        mocks = openMocks(this);
+        initMocks(this);
         transactionValidator = new TransactionValidator();
 
         when(transaction.getFromAccountNum()).thenReturn(AUTHED_ACCOUNT_NUM);
@@ -101,11 +99,6 @@ class TransactionValidatorTest {
         when(transaction.getToAccountNum()).thenReturn(TO_ACCOUNT_NUM);
         when(transaction.getToRoutingNum()).thenReturn(TO_ROUTING_NUM);
         when(transaction.getAmount()).thenReturn(VALID_AMOUNT);
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        mocks.close();
     }
 
     @Test
