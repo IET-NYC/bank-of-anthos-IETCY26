@@ -488,6 +488,12 @@ def create_app():
         app_name = request.args.get('app_name')
         token = request.cookies.get(app.config['TOKEN_NAME'])
         consented = request.cookies.get(app.config['CONSENT_COOKIE'])
+        if not _is_allowed_redirect_uri(redirect_uri):
+            app.logger.error('Rejecting consent request with invalid redirect_uri.')
+            return redirect(url_for('login',
+                                    msg='Error: Invalid redirect_uri',
+                                    _external=True,
+                                    _scheme=app.config['SCHEME']))
         if verify_token(token):
             if consented == "true":
                 app.logger.debug('User consent already granted.')
@@ -526,6 +532,22 @@ def create_app():
 
         app.logger.debug('Checking consent. consent: %s', consent)
 
+        if not _is_allowed_redirect_uri(redirect_uri):
+            app.logger.error('Rejecting consent request with invalid redirect_uri.')
+            return redirect(url_for('login',
+                                    msg='Error: Invalid redirect_uri',
+                                    _external=True,
+                                    _scheme=app.config['SCHEME']))
+
+        if not verify_token(token):
+            app.logger.error('Rejecting consent request without a valid session.')
+            return redirect(url_for('login',
+                                    response_type="code",
+                                    state=state,
+                                    redirect_uri=redirect_uri,
+                                    _external=True,
+                                    _scheme=app.config['SCHEME']))
+
         if consent == "true":
             app.logger.info('User consent granted.')
             resp = _auth_callback_helper(state, redirect_uri, token)
@@ -534,6 +556,11 @@ def create_app():
             app.logger.info('User consent denied.')
             resp = make_response(redirect(redirect_uri + '#error=access_denied', 302))
         return resp
+
+    def _is_allowed_redirect_uri(redirect_uri):
+        """Returns True only for the exact redirect_uri registered for the OAuth client."""
+        allowed_redirect_uri = os.environ.get('ALLOWED_OAUTH_REDIRECT_URI')
+        return bool(allowed_redirect_uri) and redirect_uri == allowed_redirect_uri
 
     def _auth_callback_helper(state, redirect_uri, token):
         try:
